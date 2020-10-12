@@ -42,7 +42,7 @@ public class CountingBloomFilter {
 
   public void encodeElements() {
     for (int i = 0; i < elements.length; i++)
-      if (elements[i] > 0)
+      if (elements[i] != -1)
         encode(elements[i]);
   }
 
@@ -64,9 +64,10 @@ public class CountingBloomFilter {
     for (int i = 0; i < numRemoved; i++) {
       int index = Math.abs(rand.nextInt(elements.length));
       removed[i] = elements[index];
-      remove(elements[index]);
-      elements[index] = 0;
-
+      if (elements[index] != -1) {
+        remove(elements[index]);
+        elements[index] = -1;
+      }
     }
   }
 
@@ -90,7 +91,7 @@ public class CountingBloomFilter {
 
   public void lookupElements() {
     for (int i = 0; i < elements.length; i++) {
-      if (elements[i] > 0)
+      if (elements[i] != -1)
         lookup(elements[i]);
     }
   }
@@ -102,13 +103,11 @@ public class CountingBloomFilter {
     }
 
     for (int i = 0; i < numHashes; i++) {
-      if (counter[hashes[i]] == 0) {
-        continue;
-      } else {
-        numFound++;
-        break;
+      if (counter[hashes[i]] <= 0) {
+        return;
       }
     }
+    numFound++;
   }
 
 }

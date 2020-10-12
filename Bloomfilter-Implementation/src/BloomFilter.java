@@ -42,34 +42,27 @@ public class BloomFilter {
   }
 
   /**
-   * return false if element is already encoded
+   * 
    * 
    * @param element
    * @return
    */
-  public boolean encode(int element) {
+  public void encode(int element) {
     // hash element to k entries in the bitmap
     int[] hashes = new int[numHashes];
-    boolean flag = false;
     for (int i = 0; i < numHashes; i++) {
       hashes[i] = (s[i] ^ element) % numBits;
     }
+
     // check if all are 1
-    for (int i = 0; i < hashes.length; i++) {
-      if (bitmap[hashes[i]] == 1)
-        continue;
-      else {
-        // set all the hashes to 1
-        flag = true;
-        notEncoded++;
-        setToOne(hashes);
-        break;
-      }
+    for (int i = 0; i < hashes.length;) {
+      if (lookup(element)) // already present
+        return;
+
+      // set all the hashes to 1
+      setToOne(hashes);
+      break;
     }
-    if (!flag) {
-      alreadyEncoded++;
-    }
-    return flag;
   }
 
   public void setToOne(int[] hashes) {
@@ -81,28 +74,30 @@ public class BloomFilter {
 
   public void lookupElements() {
     for (int i = 0; i < elements.length; i++) {
-      lookup(elements[i]);
+      if (lookup(elements[i]))
+        numFound++;
     }
   }
 
   /**
-   * Increments the counter by 1 if lookup was successful
+   * returns true if lookup was successful
    * 
    * @param element
    * @return
    */
-  public void lookup(int element) {
+  public boolean lookup(int element) {
     int[] hashes = new int[numHashes];
     for (int i = 0; i < numHashes; i++) {
       hashes[i] = (s[i] ^ element) % numBits;
     }
 
     for (int i = 0; i < numHashes; i++) {
-      if (bitmap[hashes[i]] == 0) {
-        numFound++;
-        // System.out.println("found");
-        setToOne(hashes);
+      if (bitmap[hashes[i]] == 1) {
+        continue;
+      } else {
+        return false;
       }
     }
+    return true;
   }
 }

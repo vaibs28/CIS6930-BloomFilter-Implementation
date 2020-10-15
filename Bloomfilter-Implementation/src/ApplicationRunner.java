@@ -14,7 +14,7 @@ public class ApplicationRunner {
     // set B
     bf.generateElements();
     bf.lookupElements();
-    System.out.println("Found in set B = " + bf.numFound);
+    System.out.println("Found in set B = " + bf.numFound + "\n");
 
     System.out.println("********COUNTING BLOOM FILTER IMPLEMENTATION***********");
     CountingBloomFilter cbf = new CountingBloomFilter(1000, 10000, 7, 500, 500);
@@ -23,7 +23,15 @@ public class ApplicationRunner {
     cbf.removeElements();
     cbf.addElements();
     cbf.lookupElements();
-    System.out.println("Found in Set A= " + cbf.numFound);
+    System.out.println("Found in Set A= " + cbf.numFound + "\n");
+
+    System.out.println("********CODED BLOOM FILTER IMPLEMENTATION**************");
+    CodedBloomFilter codf = new CodedBloomFilter(7, 1000, 3, 30000, 7);
+    codf.generateSets();
+    codf.encodeSets();
+    codf.lookup();
+    System.out.println("Number of elements=" + codf.numFound);
+
   }
 
 }

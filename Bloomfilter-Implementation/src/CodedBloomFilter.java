@@ -47,7 +47,7 @@ public class CodedBloomFilter {
   }
 
   public void initMapping(Map<Integer, String> map, int numSets) {
-    for (int i = 0; i < numSets; i++) {
+    for (int i = 1; i <= numSets; i++) {
       StringBuilder sb = new StringBuilder();
       String binary = Integer.toBinaryString(i);
       sb.append(binary);
@@ -75,7 +75,7 @@ public class CodedBloomFilter {
 
   public void encodeSets() {
     for (int i = 0; i < numSets; i++) {
-      String code = setMapping.get(i);
+      String code = setMapping.get(i+1);
       // for all sets, encode all elements
       for (int j = 0; j < code.length(); j++) {
         if (code.charAt(j) == '1') {
@@ -99,23 +99,21 @@ public class CodedBloomFilter {
   public void lookup() {
     for (int i = 0; i < numSets; i++) {
       int[] elements = set[i];
-      String code = setMapping.get(i);
-      char[] arr = code.toCharArray();
-
+      String code = setMapping.get(i+1);
+      
       // lookup for all elements
       for (int j = 0; j < elements.length; j++) {
         // lookup in all filters
         int element = elements[j];
+        StringBuilder foundCode = new StringBuilder("000");
         for (int k = 0; k < numFilters; k++) {
           if (isFound(element, filter[k])) {
-            numFound++;
-            // reconstruct
-            arr[k] = '1';
-            code = new String(arr);
-            setMapping.put(i, code);
-            break;
+            foundCode.setCharAt(k, '1');
           }
         }
+        // System.out.println(foundCode);
+        if (!foundCode.toString().equals("000") && code.equals(foundCode.toString()))
+          numFound++;
       }
     }
   }
@@ -126,6 +124,7 @@ public class CodedBloomFilter {
         int hash = s[j] ^ element;
         if (filter[hash % numBits] == 0)
           return false;
+
       }
     }
     return true;

@@ -31,6 +31,7 @@ public class BloomFilter {
   }
 
   public void generateElements() {
+    numFound = 0;
     for (int i = 0; i < numElements; i++) {
       elements[i] = Math.abs(rand.nextInt());
     }

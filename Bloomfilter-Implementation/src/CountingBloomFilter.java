@@ -1,17 +1,21 @@
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 
 public class CountingBloomFilter {
   int numBits; // 10000
   int numElements; // 1000
   int numHashes; // 7
   int[] s;
-  int[] elements;
+  Set<Integer> elements;
+  Set<Integer> original;
+  Set<Integer> removed;
   int numFound;
   int numRemoved; // 500
   int numAdded; // 500
   int[] counter;
-  int[] removed;
-  int[] original;
   Random rand = new Random();
 
   public CountingBloomFilter(int numElements, int numBits, int numHashes, int numRemoved,
@@ -23,9 +27,8 @@ public class CountingBloomFilter {
     this.numAdded = numAdded;
     s = new int[numHashes];
     counter = new int[numBits];
-    elements = new int[numElements];
-    removed = new int[numRemoved];
-    // original = new int[numElements - numRemoved];
+    elements = new HashSet(numElements);
+    removed = new HashSet();
     generateKHashFunctions();
   }
 
@@ -36,14 +39,21 @@ public class CountingBloomFilter {
   }
 
   public void generateElements() {
-    for (int i = 0; i < numElements; i++)
-      elements[i] = Math.abs(rand.nextInt());
+    for (int i = 0; i < numElements; i++) {
+      int val = Math.abs(rand.nextInt());
+      if (!elements.contains(val)) {
+        elements.add(val);
+      } else {
+        i--;
+      }
+    }
   }
 
   public void encodeElements() {
-    for (int i = 0; i < elements.length; i++)
-      if (elements[i] != -1)
-        encode(elements[i]);
+    Iterator<Integer> iter = elements.iterator();
+    while (iter.hasNext()) {
+      encode(iter.next());
+    }
   }
 
   public boolean encode(int element) {
@@ -62,11 +72,13 @@ public class CountingBloomFilter {
 
   public void removeElements() {
     for (int i = 0; i < numRemoved; i++) {
-      int index = Math.abs(rand.nextInt(elements.length));
-      removed[i] = elements[index];
-      if (elements[index] != -1) {
-        remove(elements[index]);
-        elements[index] = -1;
+      int index = Math.abs(rand.nextInt(elements.size()));
+      int val = (int) elements.toArray()[index];
+      if (!removed.contains(val)) {
+        remove(val);
+        removed.add(val);
+      } else {
+        i--;
       }
     }
   }
@@ -80,7 +92,13 @@ public class CountingBloomFilter {
 
   public void addElements() {
     for (int i = 0; i < numAdded; i++) {
-      encode(Math.abs(rand.nextInt()));
+      int index = Math.abs(rand.nextInt(elements.size()));
+      int val = (int) elements.toArray()[index];
+      if (!removed.contains(val)) {
+        encode(val);
+      } else {
+        i--;
+      }
     }
   }
 
@@ -90,9 +108,9 @@ public class CountingBloomFilter {
    */
 
   public void lookupElements() {
-    for (int i = 0; i < elements.length; i++) {
-      if (elements[i] != -1)
-        lookup(elements[i]);
+    Iterator<Integer> iter = elements.iterator();
+    while (iter.hasNext()) {
+      lookup(iter.next());
     }
   }
 
@@ -109,5 +127,7 @@ public class CountingBloomFilter {
     }
     numFound++;
   }
+
+
 
 }

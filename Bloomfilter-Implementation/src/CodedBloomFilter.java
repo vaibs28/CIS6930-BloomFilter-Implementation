@@ -1,6 +1,9 @@
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 public class CodedBloomFilter {
 
@@ -16,6 +19,7 @@ public class CodedBloomFilter {
   Random rand = new Random();
   Map<Integer, String> setMapping;
   int codeLength;
+  Map<Integer, Set<Integer>> elementToHashes;
 
   public CodedBloomFilter(int numSets, int numElements, int numFilters, int numBits,
       int numHashes) {
@@ -32,6 +36,7 @@ public class CodedBloomFilter {
     this.codeLength = (int) Math.ceil((Math.log(numSets + 1) / Math.log(2)));
     initMapping(setMapping, numSets);
     generateKHashFunctions();
+    elementToHashes = new HashMap();
   }
 
   public void initFilters() {
@@ -75,7 +80,7 @@ public class CodedBloomFilter {
 
   public void encodeSets() {
     for (int i = 0; i < numSets; i++) {
-      String code = setMapping.get(i+1);
+      String code = setMapping.get(i + 1);
       // for all sets, encode all elements
       for (int j = 0; j < code.length(); j++) {
         if (code.charAt(j) == '1') {
@@ -90,6 +95,15 @@ public class CodedBloomFilter {
     for (int i = 0; i < elements.length; i++) {
       for (int j = 0; j < numHashes; j++) {
         int hash = s[j] ^ elements[i];
+        if (elementToHashes.containsKey(elements[i])) {
+          Set<Integer> set = elementToHashes.get(elements[i]);
+          set.add(hash);
+          elementToHashes.put(elements[i], set);
+        } else {
+          Set<Integer> set = new HashSet();
+          set.add(hash);
+          elementToHashes.put(elements[i], set);
+        }
         // insert into the filter with filterNum
         filter[filterNumber][hash % numBits] = 1;
       }
@@ -99,14 +113,15 @@ public class CodedBloomFilter {
   public void lookup() {
     for (int i = 0; i < numSets; i++) {
       int[] elements = set[i];
-      String code = setMapping.get(i+1);
-      
+      String code = setMapping.get(i + 1);
+
       // lookup for all elements
       for (int j = 0; j < elements.length; j++) {
         // lookup in all filters
         int element = elements[j];
-        StringBuilder foundCode = new StringBuilder("000");
+        StringBuilder foundCode = new StringBuilder();
         for (int k = 0; k < numFilters; k++) {
+          foundCode.append("0");
           if (isFound(element, filter[k])) {
             foundCode.setCharAt(k, '1');
           }
@@ -119,13 +134,13 @@ public class CodedBloomFilter {
   }
 
   private boolean isFound(int element, int[] filter) {
-    for (int i = 0; i < filter.length; i++) {
-      for (int j = 0; j < numHashes; j++) {
-        int hash = s[j] ^ element;
-        if (filter[hash % numBits] == 0)
-          return false;
-
-      }
+    if (elementToHashes.get(element) == null)
+      return false;
+    Set<Integer> set = elementToHashes.get(element);
+    Iterator<Integer> iter = set.iterator();
+    while (iter.hasNext()) {
+      if (filter[iter.next() % numBits] == 0)
+        return false;
     }
     return true;
   }

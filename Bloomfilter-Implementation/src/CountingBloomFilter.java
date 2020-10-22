@@ -72,8 +72,7 @@ public class CountingBloomFilter {
 
   public void removeElements() {
     for (int i = 0; i < numRemoved; i++) {
-      int index = Math.abs(rand.nextInt(elements.size()));
-      int val = (int) elements.toArray()[index];
+      int val = (int) elements.toArray()[Math.abs(rand.nextInt(elements.size()))];
       if (!removed.contains(val)) {
         remove(val);
         removed.add(val);
@@ -92,9 +91,9 @@ public class CountingBloomFilter {
 
   public void addElements() {
     for (int i = 0; i < numAdded; i++) {
-      int index = Math.abs(rand.nextInt(elements.size()));
-      int val = (int) elements.toArray()[index];
-      if (!removed.contains(val)) {
+      int val = Math.abs(rand.nextInt());
+      // int val = (int) elements.toArray()[index];
+      if (!removed.contains(val) && !elements.contains(val)) {
         encode(val);
       } else {
         i--;
